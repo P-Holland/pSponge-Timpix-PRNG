@@ -29,8 +29,8 @@ class tests:
             lower = x
         inte = integrate.quad(lambda t: exp(-t)*(t**(a-1)),lower,upper)
 
-    def erfc(a,*others):
-        print(others)
+    def erfc(self,a):
+        #print(others)
         out = 2/(pi**(1/2))
         in_ = integrate.quad(lambda u: exp(-(u**2)),a,inf)[0]
         whole = out*in_
@@ -45,12 +45,11 @@ class tests:
             print("Longer string needed for accurate results - Frequency Test")
         S = 0
         for i in ep:
-            S+=((2*int(i))-1) #converts 1 -> 1 and 0-> -1 and sums them
+        		S+=((2*int(i))-1) #converts 1 -> 1 and 0-> -1 and sums them
         s = abs(S) #gives absolute value of s
         s/=n**(1/2) #divides s by root(n)
         a = (S/(2**(1/2)))
-        print(a)
-        P = self.erfc(a) #errored saying given 2 arguments when only 1 given - 20:44 8/5/18 fixed 
+        P = self.erfc(a) #errored saying given 2 arguments when only 1 given - 20:44 8/5/18 fixed 9:41 10/5/18 erfc needed a self parameter
         return P;
 
     def BlockFrequency(self,M):
@@ -79,21 +78,21 @@ class tests:
         P = igame("Q",N/2,chis/2)
         return P;
 
-def test_Frequency():
+def test_Frequency(): #Passed
     ep = ""
     ep2 = ""
     ep3 = ""
     for i in range(0,200):
         ep = ep+"1"
         ep2 = ep2+"0"
-        ep3 = ep3+str(((i/2)%1)*2)  #odds goto 1 evens to 0, creates an alternating string
+        ep3 = ep3+str(int(((i/2)%1)*2))  #odds goto 1 evens to 0, creates an alternating string
     test = tests(ep,0.1)
     test2 = tests(ep2,0.1)
     test3 = tests(ep3,0.1)
     out1 = test.Frequency()
     out2 = test2.Frequency()
     out3 = test3.Frequency()
-    print(out1,out2,out3) #should all be less than 0.1
+    print(out1,out2,out3) #first 2 should be less than 0.1, last should be close to 1, passed
 
 def test_inte(): #compares the output to that of a trusted integration calculator
     b = 2
@@ -125,23 +124,45 @@ def test_inte(): #compares the output to that of a trusted integration calculato
 def test_erfc(): #uses data given in examples in the spec to test the function
     a = (0.632455532/(2**(1/2)))
     expected = 0.527089
-    gained = round(tests.erfc(a),6)
+    gained = round(tests.erfc(tests,a),6)
     #print(gained)
     if gained != expected:
         raise ValueError("Incorrect output, erfc test 1") #This threw at 19:36 8/5/18, fixed: 19:40 8/5/18 - scipy can integrate -(u^2)
     
     a = 55/(12*(20**(1/2)))
     expected = 0.147232
-    gained = round(tests.erfc(a),6)
+    gained = round(tests.erfc(tests,a),6)
     if gained != expected:
         raise ValueError("Incorrect output, erfc test 2")
 
     a = 2.176429/((2**(1/2)))
     expected =  0.029523
-    gained = round(tests.erfc(a),6)
+    gained = round(tests.erfc(tests,a),6)
     #print(gained)
     if gained != expected:
         raise ValueError("Incorrect output, erfc test 3")#threw at 19:40 8/5/18 fixed at 19:41 8/5/18 - I didn't change expected
+        
+def test_blockFrequency():
+		ep = 1100100100001111110110101010001000100001011010001100001000110100110001001100011001100010100010111000
+		Test = tests(ep,0.1)
+		out = Test.BlockFrequency(10)
+		if round(out,6) != 0.706438:
+  			raise ValueError("Incorrect output BlockFrequency test 1 given{0}, needed{1}".format(out,0.706438))
+  	
+		ep = ""
+		ep2 = ""
+		ep3 = ""
+		for i in range(0,200):
+				ep = ep+"1"
+				ep2 = ep2+"0"
+				ep3 = ep3+str(int(((i/2)%1)*2))  #odds goto 1 evens to 0, creates an alternating string
+		test = tests(ep,0.1)
+		test2 = tests(ep2,0.1)
+		test3 = tests(ep3,0.1)
+		out1 = test.BlockFrequency(10)
+		out2 = test2.BlockFrequency(10)
+		out3 = test3.BlockFrequency(10)
+		print(out1,out2,out3) #first 2 should be less than 0.1, last should be close to 1, passed
 test_Frequency()
 test_inte()
 test_erfc()
