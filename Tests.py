@@ -106,7 +106,7 @@ class tests:
             P = self.erfc(inf)
         return P;
 
-    def LongestRunOfOnes(self,M,K):
+    def LongestRunOfOnes(self,M):
         """M of 8,128 or 10000 are recommended, K of 3,5 or 6 are recommended (match to the similar M ie 8 and 3)"""
         #n = MN, N = n/M
         ep = self.ep
@@ -136,40 +136,40 @@ class tests:
             v = [  0, 0 , 0 , 0 ]
             low,high = 1,4
             Pi = [0.2148,0.3672,0.2305,0.1875]
-            len_ = 4
+            K = 3
         elif M==128:
             v_map = {4:0,5:1,6:2,7:3,8:4,9:5}
             v = [  0, 0 , 0 , 0 , 0 , 0 ]
             low,high = 4,9
             Pi = [0.1174,0.2430,0.2493,0.1752,0.1027,0.1124]
-            len_ = 6
+            K = 5
         elif M==512:
             v_map = {6:0,7:1,8:2,9:3,10:4,11:5}
             v = [  0, 0 , 0 , 0 , 0  ,  0 ]
             low,high = 6,11
             Pi = [0.1174,0.2460,0.2523,0.1755,0.1027,0.1124]
-            len_ = 6
+            K = 5
         elif M==1000:
             v_map = {7:0,8:1,9:2,10:3,11:4,12:5}
             v = [  0, 0 , 0 , 0  , 0  ,  0 ]
             low,high = 7,12
             Pi = [0.1307,0.2437,0.2452,0.1714,0.1002,0.1088]
-            len_ = 6
+            K = 5
         elif M = 10000:
             v_map = {10:0,11:1,12:2,13:3,14:4,15:5,16:6}
             v = [  0 ,  0 ,  0 , 0  , 0  ,  0 , 0  ]
             low,high = 10,16
             Pi = [0.0882,0.2092,0.2483,0.1933,0.1208,0.0675,0.0727]
-            len_ = 7
-        for i in a:
-            if a<low:
-                v[0]+=1
-            elif a>high:
-                v[len-1]+=1
+            K = 6
+        for i in range(0,K+1):
+            if i<low:
+                v[0]+=a[i] 
+            elif i>high:
+                v[len-1]+=a[i]
             else:
-                v[v_map[i]]+=1
+                v[v_map[i]]+=a[i] 
         chis = 0
-        for i in range(K):
+        for i in range(K+1):
             chis+=(((v[i]-(N*Pi[i]))**2)/(N*Pi[i]))
         P = self.igame(K/2,chis/2)
         return P;
