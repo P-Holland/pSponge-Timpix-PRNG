@@ -5,6 +5,8 @@ odds of passing all tests when not random are low
 """
 from scipy import integrate
 from numpy import exp, inf, pi
+from numpy.linalg import matrix_rank as matrix_rank
+from numpy import matrix
 class tests:
     def __init__(self,ep,p):
         self.ep = ep
@@ -114,7 +116,7 @@ class tests:
         if n<750000:
             print("A longer string is needed for accurate results, or a low M value")
         N = n/M
-        N = N-(N%1) #gets the floor of n/M
+        N = int(N-(N%1)) #gets the floor of n/M
         ep = ep[:N*M] #shortens ep to the needed length making it easier to use (less proccessing required)
         a = []
         for i in range(M+1): #creates an empty list to store values
@@ -123,13 +125,18 @@ class tests:
             current = 0
             highest = 0
             in_use = ep[M*i:M*(i+1)]
+            #print(in_use)
             for b in in_use:
+                #print(b)
                 if b == "1":
                     current +=1
                 else:
                     if current>highest:
                         highest = current
-                    current = 0
+                    current =0
+            if current>highest:
+            	highest = current
+            #print(highest)
             a[highest]+=1
         if M == 8:
             v_map = {1:0,2:1,3:2,4:3}
@@ -155,12 +162,13 @@ class tests:
             low,high = 7,12
             Pi = [0.1307,0.2437,0.2452,0.1714,0.1002,0.1088]
             K = 5
-        elif M = 10000:
+        elif M == 10000:
             v_map = {10:0,11:1,12:2,13:3,14:4,15:5,16:6}
             v = [  0 ,  0 ,  0 , 0  , 0  ,  0 , 0  ]
             low,high = 10,16
             Pi = [0.0882,0.2092,0.2483,0.1933,0.1208,0.0675,0.0727]
             K = 6
+        #print(a)
         for i in range(0,K+1):
             if i<low:
                 v[0]+=a[i] 
@@ -168,13 +176,46 @@ class tests:
                 v[len-1]+=a[i]
             else:
                 v[v_map[i]]+=a[i] 
+        print(v)
         chis = 0
         for i in range(K+1):
             chis+=(((v[i]-(N*Pi[i]))**2)/(N*Pi[i]))
-        P = self.igame(K/2,chis/2)
+        print(chis)
+        P = self.igame("Q",K/2,chis/2)
         return P;
-
-
+    
+    def Rank(self):
+	    n = self.n
+	    ep = self.ep
+	    M = 32
+	    Q = M
+	    N = n/(M*Q)
+	    N -= N%1 #finds floor of n/MQ
+	    n = N*M*Q
+	    ep = ep[:n]
+	    chunks = []
+	    matrices = []
+	    for i in range(N):
+	    	a=(ep[(i*M*Q):((i+1)*M*Q)])
+	    	temp = []
+	    	for c in range(M):
+	    		temp.append(ep[c*Q:(c+1)*Q])
+	    	matrices.append(matrix(temp))
+	    ranks = []
+	    for i in matrices:
+	    	ranks.append(matrix_rank(i))
+	    FM = 0
+	    FM_ = 0
+	    FR = 0
+	    for i in ranks:
+	    	if i == M:
+	    		FM += 1
+	    	elif i == (M-1):
+	    		FM_ += 1
+	    FR = N-FM-FM_
+	    chis = ( ( (FM - (0.2888*N))**2 )/(0.2888*N) )+( ( (FM_ - (0.5776*N))**2 )/(0.5776*N) )+( ( (FR-(0.1336*N))**2 )/(0.1336*N) )
+	    P = self.igame("P",1,chis/2)
+	    return P;
 def test_Frequency(): #Passed
     ep = ""
     ep2 = ""
@@ -281,8 +322,19 @@ def test_runs():
     out3 = test3.Runs()
     print(out1,out2,out3) #all should be close to 0, passed
 
+def test_longest_run():
+	ep =  "11001100000101010110110001001100111000000000001001001101010100010001001111010110100000001101011111001100111001101101100010110010"
+	test = tests(ep,0.01)
+	out = round(test.LongestRunOfOnes(8),6)
+	if out !=  0.180609:
+		print ('ValueError("Incorrect output longest run test 1, given {0}, needed {1})"'.format(out,0.180609)) #failed 10:54 11/5/18 fixed: 11:39 11/5/18 - was not counting the last bit as the loop broke or resetting the current variable, still throws as the spec uses lower accuracy
+
+def test_runs():
+	ep = 
+	test = tests
 test_Frequency()
 test_inte()
 test_erfc()
 test_blockFrequency()
 test_runs()
+test_longest_run()
