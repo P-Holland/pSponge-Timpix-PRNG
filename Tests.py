@@ -5,9 +5,7 @@ odds of passing all tests when not random are low
 """
 from scipy import integrate
 from numpy import exp, inf, pi
-from numpy.linalg import matrix_rank as matrix_rank
-from numpy import matrix
-from BinaryMatrix import BinaryMatrix #code from https://gist.github.com/StuartGordonReid/eb59113cb29e529b8105
+import numpy as np
 class tests:
     def __init__(self,ep,p):
         self.ep = ep
@@ -103,8 +101,11 @@ class tests:
         rank = 0
         for i in matrix:
             #print(i)
-            if "1" not in i:
+            if "1" in i:
                 rank += 1
+        if rank == 30:
+            print(matrix)
+            exit()
         return rank;
                         
     def Frequency(self): #Tests frequency of 0's and 1's to check they are aproximatly even
@@ -250,24 +251,31 @@ class tests:
     def Rank(self):
         n = self.n
         ep = self.ep
-        M = 32
-        Q = M
+        M = 32 #rows
+        Q = M #columns
         N = n/(M*Q)
         N = int(N-N%1) #finds floor of n/MQ
         n = N*M*Q
         ep = ep[:n]
-        chunks = []
         matrices = []
-        for i in range(N):
-            a=(ep[(i*M*Q):((i+1)*M*Q)])
+        for i in range(0,N):
+            chunk = ep[i*M*Q:(i+1)*M*Q]
             temp = []
-            for c in range(M):
-                temp.append(ep[c*Q:(c+1)*Q])
-            matrices.append((temp))
+            for a in range(0,Q):
+                temp_ = []
+                to_split = chunk[a*M:(a+1)*M]
+                temp_ = list(to_split)
+                for b in range(0,M):
+                    temp_[b] = int(temp_[b])
+                temp.append(temp_)
+            print((temp))
+            exit()
+            matrices.append(np.matrix(temp))
+                
         ranks = []
         for i in matrices:
-            rank = self.Matrix_Rank(i)
-            ranks.append(rank)
+            rank_ = np.linalg.matrix_rank(i) #this works now (takes int's not str's), failed: 20:18 13/5/18 - no output
+            ranks.append(rank_)
         print(ranks)
         FM = 0
         FM_ = 0
@@ -408,7 +416,7 @@ def test_rank():
     test = tests(ep,0.01)
     out = round(test.Rank(),6)
     if out!=0.532069:
-        raise ValueError("Incorrect output Rank test 1, needed: {0} given: {1}".format(0.532069,out)) #threw 20:18 12/5/18 out = 1, rank is returning incorrect output
+        raise ValueError("Incorrect output Rank test 1, needed: {0} given: {1}".format(0.532069,out)) #threw 20:18 12/5/18 out = 1, rank is returning incorrect output, tried 3 functions - no luck
 	
 test_rank()
 test_Frequency()
