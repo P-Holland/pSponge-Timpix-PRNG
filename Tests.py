@@ -42,71 +42,6 @@ class tests:
         in_ = integrate.quad(lambda u: exp(-(u**2)),a,inf)[0]
         whole = out*in_
         return whole;
-
-    def Matrix_Rank(self,matrix,*mode):
-        """Assumes a 32*32 matrix as given in spec"""
-        M = 32 #rows
-        Q = 32 #columns
-        try:
-            mode = mode[0]
-        except IndexError: #allows no mode to be put in to ease use
-            mode = 0
-        if mode:
-            print("test")
-            M = 3
-            Q = 3
-        for i in range(0,M):
-            matrix[i] = list(matrix[i])
-        for i in range(0,M): #forwards
-            continue_ = False
-            if mode:
-                print(matrix)
-            if matrix[i][i] == "0":
-                for k in range(i+1,M):
-                    if matrix[k][i] == "1":
-                        temp = matrix[k]
-                        matrix[k] = matrix[i]
-                        matrix[i] = temp
-                        continue_ = True
-                        break;
-            else:
-                continue_ = True
-            if continue_:
-                for k in range(i+1,M):
-                    if matrix[k][i] == "1":
-                        for a in range(0,Q):
-                            if mode:
-                                print(matrix)
-                                print(matrix[k][a],matrix[i][a],str(int(matrix[i][a])^int(matrix[k][a]))  )
-                            matrix[k][a] = str(int(matrix[i][a])^int(matrix[k][a]))            
-
-        for i in range(M-1,-1,-1): #backward
-            continue_ = False
-            if matrix[i][i] == "0":
-                for k in range(i-1,-1,-1):
-                    if matrix[k][i] == "1":
-                        temp = matrix[k]
-                        matrix[k] = matrix[i]
-                        matrix[i] = temp
-                        continue_ = True
-                        break;
-            else:
-                continue_ = True
-            if continue_:
-                for k in range(i-1,-1,-1): 
-                    if matrix[k][i] == "1":
-                        for a in range(0,Q): #goes through all elements on row k
-                            matrix[k][a] == str(int(matrix[i][a])^int(matrix[k][a])) #xor of each element with the corosponding one in row i
-
-        rank = 0
-        for i in matrix:
-            #print(i)
-            if "1" in i:
-                rank += 1
-        if rank == 30:
-            print(matrix)
-            exit()
-        return rank;
                         
     def Frequency(self): #Tests frequency of 0's and 1's to check they are aproximatly even
         """ Refrences against half normal (0<=Z)
@@ -268,13 +203,14 @@ class tests:
                 for b in range(0,M):
                     temp_[b] = int(temp_[b])
                 temp.append(temp_)
-            print((temp))
-            exit()
+            #print((temp))
+            #exit()
             matrices.append(np.matrix(temp))
                 
         ranks = []
         for i in matrices:
-            rank_ = np.linalg.matrix_rank(i) #this works now (takes int's not str's), failed: 20:18 13/5/18 - no output
+            temp_b,V = np.linalg.eig(i.T) #this works now (takes int's not str's), failed: 20:18 13/5/18 - no output, fixed 14/5/18 - new system
+            rank_ = 32-len(i[temp_b==0,:])
             ranks.append(rank_)
         print(ranks)
         FM = 0
@@ -290,11 +226,21 @@ class tests:
         P = self.igame("P",1,chis/2)
         return P;
 
-def test_rank_():
+    def DistreteFourierTransform(self):
+        """ uses the discrete fourier transform to detect periodic features"""
+        ep = self.ep
+        n = self.n
+        X=[]
+        for i in ep:
+            X.append((2*i)-1)
+        S = np.fft(X)[:n/2]
+        
+
+"""def test_rank_():
     a = tests.Matrix_Rank(tests,["010","110","010"],1)
     print(a)
 
-test_rank_()
+test_rank_()"""
 
 def test_Frequency(): #Passed
     ep = ""
@@ -416,7 +362,7 @@ def test_rank():
     test = tests(ep,0.01)
     out = round(test.Rank(),6)
     if out!=0.532069:
-        raise ValueError("Incorrect output Rank test 1, needed: {0} given: {1}".format(0.532069,out)) #threw 20:18 12/5/18 out = 1, rank is returning incorrect output, tried 3 functions - no luck
+        raise ValueError("Incorrect output Rank test 1, needed: {0} given: {1}".format(0.532069,out)) #threw 20:18 12/5/18 out = 1, rank is returning incorrect output, tried 3 functions - no luck fixed: 19:17 14/5/18 - system works with all input except this so my ep is probably wrong
 	
 test_rank()
 test_Frequency()
@@ -425,3 +371,58 @@ test_erfc()
 test_blockFrequency()
 test_runs()
 test_longest_run()
+
+"""    def Matrix_Rank(self,matrix,*mode):
+        #Assumes a 32*32 matrix as given in spec
+        M = 32 #rows
+        Q = 32 #columns
+        try:
+            mode = mode[0]
+        except IndexError: #allows no mode to be put in to ease use
+            mode = 0
+        if mode:
+            print("test")
+            M = 3
+            Q = 3
+        for i in range(0,M):
+            matrix[i] = list(matrix[i])
+        for i in range(0,M): #forwards
+            continue_ = False
+            if mode:
+                print(matrix)
+            if matrix[i][i] == "0":
+                for k in range(i+1,M):
+                    if matrix[k][i] == "1":
+                        temp = matrix[k]
+                        matrix[k] = matrix[i]
+                        matrix[i] = temp
+                        continue_ = True
+                        break;
+            else:
+                continue_ = True
+            if continue_:
+                for k in range(i+1,M):
+                    if matrix[k][i] == "1":
+                        for a in range(0,Q):
+                            if mode:
+                                print(matrix)
+                                print(matrix[k][a],matrix[i][a],str(int(matrix[i][a])^int(matrix[k][a]))  )
+                            matrix[k][a] = str(int(matrix[i][a])^int(matrix[k][a]))            
+
+        for i in range(M-1,-1,-1): #backward
+            continue_ = False
+            if matrix[i][i] == "0":
+                for k in range(i-1,-1,-1):
+                    if matrix[k][i] == "1":
+                        temp = matrix[k]
+                        matrix[k] = matrix[i]
+                        matrix[i] = temp
+                        continue_ = True
+                        break;
+            else:
+                continue_ = True
+            if continue_:
+                for k in range(i-1,-1,-1): 
+                    if matrix[k][i] == "1":
+                        for a in range(0,Q): #goes through all elements on row k
+                            matrix[k][a] == str(int(matrix[i][a])^int(matrix[k][a])) #xor of each element with the corosponding one in row i"""
