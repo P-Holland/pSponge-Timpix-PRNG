@@ -2,48 +2,65 @@ from math import log
 
 class Sponge:
     def __init__(self,b,nr=0):
+        self.iter = 0
         self.b = b
-        self.w = self.b/25
+        self.w = int(self.b/25)
         self.fl = int(log(self.w,2))
         if nr == 0:
             nr = 12+(2*self.fl)
         self.nr = nr
     def S_to_A(self,S):
-        A  = form_Ad()
-        for x in range(0,5):
-            for y in range(0,5):
-                for z in range(0,5):
-                    A[x][y][z] = S[(w*((5*y)+x))+z]
+        A  = self.form_Ad()
+        w = self.w
+        x = 0
+        y = 0
+        z = 0
+        for i in range(0,25*w):
+            if z==w:
+                x+=1
+                z=0
+            if x==5:
+                y+=1
+                x=0
+            try:
+                A[x][y][z] = str(S[i])
+            except:
+                print("iterations = ",self.iter)
+                print("i={}, x={}, y={}, z={}".format(i,x,y,z))
+                print("S=",S)
+                raise IndexError;
+            z+=1
+        return A;
     def A_to_S(self,A):
         d = []
         for a in range(0,5):
             d.append("")
         Lane = []
         for b in range(0,5):
-            Lane.append(d)
+            Lane.append(d[:])
         for i in range(0,5):
             for j in range(0,5):
-                Lane[i][j] = A[i][j][0]+A[i][j][1]+A[i][j][2]+A[i][j][3]+A[i][j][4]
+                Lane[i][j] = str(A[i][j][0])+str(A[i][j][1])+str(A[i][j][2])+str(A[i][j][3])+str(A[i][j][4])
         Plane = ["","","","",""]
         for j in range(0,5):
-            Plane[j]=Lane[0,j]+Lane[1,j]+Lane[2,j]+Lane[3,j]+Lane[4,j]
-        S = Plane[0]+Plane[1]+Plane[2]+Plane[3]+Plane[4]
+            Plane[j]=str(Lane[0][j])+str(Lane[1][j])+str(Lane[2][j])+str(Lane[3][j])+str(Lane[4][j])
+        S = str(Plane[0])+str(Plane[1])+str(Plane[2])+str(Plane[3])+str(Plane[4])
         return S;
     def form_Ad(self):
         lane = []
-        for z in range(0,self.w):
+        for z in range(0,int(self.w)):
             lane.append("")
         sheet = []
         for y in range(0,5):
-            sheet.append(lane)
+            sheet.append(lane[:])
         Ad = []
         for x in range(0,5):
-            Ad.append(sheet)
+            Ad.append(sheet[:])
         return Ad;
 
     def theta(self,A):
         row = []
-        Ad = form_Ad()
+        Ad = self.form_Ad()
         for z in range(0,self.w):
             row.append(0)
         c = []
@@ -51,51 +68,56 @@ class Sponge:
         for x in range(0,5):
             c.append(row)
             d.append(row)
+        C = c
+        D = d
         for x in range(0,5):
             for z in range(0,self.w):
-                C[x][z] = A[x][0][z]^A[x][1][z]^A[x][2][z]^A[x][3][z]^A[x][4][z]
+                C[x][z] = int(A[x][0][z])^int(A[x][1][z])^int(A[x][2][z])^int(A[x][3][z])^int(A[x][4][z])
         for x in range(0,5):
             for z in range(0,self.w):
-                D[x][z] = C[(x-1)%5][z]^C[(x+1)%5][(z-1)%5]
+                D[x][z] = str(int(C[(x-1)%5][z])^int(C[(x+1)%5][(z-1)%5]))
         for x in range(0,5):
             for y in range(0,5):
                 for z in range(0,self.w):
-                    Ad[x][y][z] = A[x][y][z]^D[x][z]
+                    Ad[x][y][z] = str(int(A[x][y][z])^int(D[x][z]))
         return Ad;
 
     def rho(self,A):
-        Ad = form_Ad()
+        Ad = self.form_Ad()
         for z in range(0,self.w):
             Ad[0][0][z] = A[0][0][z]
-        x,y = 0,1
+        x,y = 1,0
         for t in range(0,23):
             for z in range(0,self.w):
-                Ad[x][y][z]=A[x][y][(z-((t+1)*(t+2))/2)%self.w]
-                x,y = y,((2*x)+(3*y))%5
+                Ad[x][y][z]=str(A[x][y][int((z-((t+1)*(t+2))/2)%self.w)])
+            x,y = y,((2*x)+(3*y))%5
         return Ad;
 
     def pi(self,A):
-        Ad = form_Ad()
+        Ad = self.form_Ad()
         for x in range(0,5):
             for y in range(0,5):
+                #print("x={}, y={},".format((x+(3*y))%5,y))
                 for z in range(0,self.w):
-                    Ad[x][y][z] = A[(x+(3*y))%5][x][z]
+                    Ad[x][y][z] = str(A[(x+(3*y))%5][x][z])
         return Ad;
 
     def chi(self,A):
-        Ad = form_Ad()
+        Ad = self.form_Ad()
+        #print(A)
         for x in range(0,5):
             for y in range(0,5):
                 for z in range(0,self.w):
-                    Ad[x][y][z]=A[x][y][z]^(A[(x+1)%5][y][z]*A[(x+2)%5][y][z])
+                    #print("t={} te={}".format(t,te))
+                    Ad[x][y][z]=str(int(A[x][y][z])^(int(A[(x+1)%5][y][z])*int()))
         return Ad;
 
     def rc(self,t):
         if t%255 == 0:
             return 1;
-        R = "10000000"
+        R = list("10000000")
         for i in range(1,t%255):
-            R = "0"+R
+            R = ["0"]+R
             R[0] = str(int(R[0])^int(R[8]))
             R[4] = str(int(R[4])^int(R[8]))
             R[5] = str(int(R[5])^int(R[8]))
@@ -104,34 +126,37 @@ class Sponge:
         return R[0];
 
     def l(self,A,ir):
-        Ad = form_Ad()
+        Ad = self.form_Ad()
         for x in range(0,5):
             for y in range(0,5):
                 for z in range(0,self.w):
                     Ad[x][y][z] = A[x][y][z]
-        RC = ""
+        RC = []
         for i in range(0,self.w):
-            RC = RC+"0"
+            RC = RC+["0"]
         for j in range(0,self.fl):
-            RC[(2**j)-1]=rc(j+7*ir)
+            RC[(2**j)-1]=self.rc(j+7*ir)
         for z in range(0,self.w):
-            Ad[0][0][z]=int(Ad[0][0][0])^int(RC[z])
+            Ad[0][0][z]=str(int(Ad[0][0][0])^int(RC[z]))
         return Ad;
 
     def rnd(self,A,ir):
-        out = l(chi(pi(rho(theta(A)))),ir)
+        #print(A[0][0])
+        out = self.l(self.chi(self.pi(self.rho(self.theta(A)))),ir)
         return out;
 
     def KECCAKp(self,s): #s is string, self.nr = number of rounds self.b = length of s, w,fl are extra
-        A = S_to_A(s)
+        A = self.S_to_A(s)
+        #print(A[0][0])
         for ir in range(12+(2*self.fl)-self.nr,12+(2*self.fl)-1):
-            A = rnd(A,ir)
-        Sd = A_to_S(A)
+            self.iter+=1
+            A = self.rnd(A,ir)
+        Sd = self.A_to_S(A)
         return Sd;
 
     def KECCAKf(self,s):
         self.nr = 12+(2*self.fl)
-        return KECCAKp(s);
+        return self.KECCAKp(s);
              
     def pad10n1(self,x,m):
         j = (-m-2)%x
@@ -166,54 +191,66 @@ class Sponge:
             S = f(S)
 
     def KECCAK(self,c,N,d): #c = capacity (will use 256),  N is string, d is length of output
-        return SPONGE(1600,24,KECCAKp,pad10n1,1600-c,N,d);
+        return SPONGE(1600,24,self.KECCAKp,self.pad10n1,1600-c,N,d);
 
 class PRNG:
     def __init__(self,r,c,k,f,pa):
-        self.r = r
-        self.c = c
-        self.k = k
-        self.f = f
-        self.pa = pa
-        self.m = 0
+        self.r = r #rate (how many bit pullable)
+        self.c = c #the number of bits not pullable
+        self.k = k #sets the padding size
+        self.f = f #function used during feed and fetch
+        self.pa = pa #padding algorithm
+        self.m = 0 #number of fetches since feed
         s = ""
         for i in range(0,self.r+self.c):
             s = s+"0"
-        self.s = s
+        self.s = s #sets the state
 
     def main(self,request,inp):
         s = self.s
         f = self.f
-        if request == "feed" and len(pad(inp))==self.k*self.r:
+        if request == "feed" and len(self.pad(inp))==self.k*self.r:
+            print("FEED")
             p = []
-            P = pad(inp)
+            P = self.pad(inp)
             for i in range(0,len(P),self.r):
-                p.append(P[i:i+self.r-1])
+                p.append(P[i:i+self.r])
             ex = ""
             for i in range(0,self.c):
                 ex = ex+"0"
+            S = list(s)
             for i in range(0,self.k):
                 P = p[i]
                 use = P+ex
-                for a in range(0,self.r+self.c):
-                    s[a]=int(s[a])^int(use[a])
-                s = f(s)
+                for a in range(0,len(s)):
+                    S[a]=str(int(s[a])^int(use[a]))
+                s = "".join(S)
+                s = str(f(s))
             self.m = 0
             self.s = s
             return "";
-        if request == fetch:
+        if request == "fetch":
             return self.squeeze(inp);
 
     def squeeze(self,l):
+        # a is the number of available bits, s is the state, m is the number of bits gained, 
         s = self.s
+        m = self.m
+        r = self.r
+        f = self.f
         if self.m == 0:
-            a = r
+            a = self.r
         else:
             a = (0-self.m)%self.r
         full = ""
+        t = 1
+        print("pre-pulling interations = "+self.iter)
         while l>0:
+            print("squeze stage=",t);t+=1
+            this = self.iter
             if a == 0:
                 s = self.f(s)
+                print(s)
                 a = self.r
             ld = min(a,l)
             out = s[self.r-a:self.r-a+ld-1]
@@ -221,6 +258,7 @@ class PRNG:
             l-=ld
             m+=ld
             full=full+out
+            print("iter = "+self.iter)
         return full;
 
     def pad(self,inp):
@@ -233,16 +271,27 @@ class PRNG:
         """
         a = self.pa(x,m)
         out = inp+a
+        if len(out) != need:
+            len_ = self.k*self.r
+            out = out[:-1]+((len_-len(out))*"0")+"1"
+        return out;
 
 def runner(request,inp,sponge,gen):
     out = gen.main(request,inp)
     if out != "":
         return out;
     
-def main(data_set):
-    k = 100
+def main(data_set,num_needed):
+    k = 1000
     sponge = Sponge(1344+256)
     gen = PRNG(1344,256,k,sponge.KECCAKf,sponge.pad10n1)
     for i in data_set:
-        runner(feed,data,sponge,gen)
-    out = runner(fetch,1000000,sponge,gen)
+        runner("feed",i,sponge,gen)
+    results = []
+    print("###Generating###")
+    for i in range(num_needed):
+        out = ""
+        for t in range(0,10):
+            out = out+(runner("fetch",100000,sponge,gen))
+        results.append(out)
+    return results;
