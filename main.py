@@ -35,18 +35,18 @@ def fetch_file(num): #gets the file the number num and gets the usefull part I n
 
 def main():
     fails=0
-    for i in range(0,10):
+    for i in range(0,5):
         full = fetch_file(i)
         use = full[:1344*1000]
         print(use)
-        try:
-            nums=Generator.main([use],10)
-        except IndexError as i:
-            
+        nums=Generator.main([use],10)
             #nums = []
             #for t in range(10):
              #   nums.append(SHA3.SHAKE256([int(use)],10**6))
         count = 0
+        file=open("nums{}.txt".format(i),"w")
+        file.write(nums)
+        file.close()
         for ep in nums:
             count+=1
             test = tests(ep,0.01)
@@ -54,4 +54,3 @@ def main():
             if not result:
                 print("!!!file {} number {} Failed!!!".format(i,count))
 main()
-                
