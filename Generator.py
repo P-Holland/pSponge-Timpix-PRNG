@@ -24,14 +24,15 @@ class Sponge:
                 x=0
             try:
                 A[x][y][z] = str(S[i])
-            except:
+            except IndexError as error:
                 print("iterations = ",self.iter)
-                print("i={}, x={}, y={}, z={}".format(i,x,y,z))
+                print("i={}, x={}, y={}, z={},w={}".format(i,x,y,z,w))
                 print("S=",S)
-                raise IndexError;
+                raise IndexError(error);
             z+=1
         return A;
     def A_to_S(self,A):
+        #print(len(A))
         d = []
         for a in range(0,5):
             d.append("")
@@ -40,7 +41,18 @@ class Sponge:
             Lane.append(d[:])
         for i in range(0,5):
             for j in range(0,5):
-                Lane[i][j] = str(A[i][j][0])+str(A[i][j][1])+str(A[i][j][2])+str(A[i][j][3])+str(A[i][j][4])
+                try:
+                    temp = Lane[i][j]
+                except:
+                    raise IndexError("lane too short")
+                try:
+                    temp = A[i][j]
+                except:
+                    raise IndexError("Welp im doomed")
+                temp = ""
+                for b in range(0,self.w):
+                    temp = temp+str(A[i][j][b])
+                Lane[i][j]=temp
         Plane = ["","","","",""]
         for j in range(0,5):
             Plane[j]=str(Lane[0][j])+str(Lane[1][j])+str(Lane[2][j])+str(Lane[3][j])+str(Lane[4][j])
@@ -150,6 +162,8 @@ class Sponge:
         #print(A[0][0])
         for ir in range(12+(2*self.fl)-self.nr,12+(2*self.fl)-1):
             self.iter+=1
+            #if self.iter>29998:
+                #print("Iterations={},State={},b={},ir={}")
             A = self.rnd(A,ir)
         Sd = self.A_to_S(A)
         return Sd;
@@ -225,10 +239,14 @@ class PRNG:
                 for a in range(0,len(s)):
                     S[a]=str(int(s[a])^int(use[a]))
                 s = "".join(S)
+                #print("s-pre=",s)
                 s = str(f(s))
+                #print("s-post=",s)
             self.m = 0
             self.s = s
             return "";
+
+        
         if request == "fetch":
             return self.squeeze(inp);
 
@@ -244,13 +262,13 @@ class PRNG:
             a = (0-self.m)%self.r
         full = ""
         t = 1
-        print("pre-pulling interations = "+self.iter)
+        print("start s =",s)
         while l>0:
             print("squeze stage=",t);t+=1
-            this = self.iter
             if a == 0:
+                #print("s=",s)
                 s = self.f(s)
-                print(s)
+                #print("s=",s)
                 a = self.r
             ld = min(a,l)
             out = s[self.r-a:self.r-a+ld-1]
@@ -258,7 +276,6 @@ class PRNG:
             l-=ld
             m+=ld
             full=full+out
-            print("iter = "+self.iter)
         return full;
 
     def pad(self,inp):
