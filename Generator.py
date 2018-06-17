@@ -48,7 +48,7 @@ class Sponge:
                 try:
                     temp = A[i][j]
                 except:
-                    raise IndexError("Welp im doomed")
+                    raise IndexError("Welp im fucked")
                 temp = ""
                 for b in range(0,self.w):
                     temp = temp+str(A[i][j][b])
@@ -264,7 +264,7 @@ class PRNG:
         t = 1
         print("start s =",s)
         while l>0:
-            print("squeze stage=",t);t+=1
+            #print("squeze stage=",t);t+=1
             if a == 0:
                 #print("s=",s)
                 s = self.f(s)
@@ -276,6 +276,7 @@ class PRNG:
             l-=ld
             m+=ld
             full=full+out
+            self.s = s
         return full;
 
     def pad(self,inp):
