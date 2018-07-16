@@ -35,7 +35,7 @@ def fetch_file(num): #gets the file the number num and gets the usefull part I n
 
 def main():
     fails=0
-    for i in range(0,2):
+    for i in range(8,10):
         full = fetch_file(i)
         use = full[:1344*1000]
         print(use)

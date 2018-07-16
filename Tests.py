@@ -6,12 +6,17 @@ odds of passing all tests when not random are low
 from scipy import integrate,fftpack
 from numpy import exp, inf, pi
 from math import log, ceil, floor
+import gc
 import numpy as np
 class tests:
     def __init__(self,ep,p):
         self.ep = ep
         self.n = len(ep)
         self.p = p
+        X=[]
+        for i in ep:
+            X.append(int(2*int(i))-1) #creates a list of coverted values: 1-> 1, 0->-1
+        self.X = X
 
     def CHF(self,a,b,z,*mode): #confluent Hypergeometric Functionm
         main = self.gamma(self,b)/(self.gamma(self,a)*self.gamma(self,b-a)) #the part out side the integral
@@ -19,10 +24,19 @@ class tests:
         out = main*inte
         if mode[0] == "test":
             return out,main,inte;
+        del a
+        del b
+        del z
+        del mode
+        del main
+        del inte
+        gc.collect()
         return out;
 
     def gamma(self,z): #donoted upper case gamma in spec, equivilent to (z-1)! for integer z
         Gam = integrate.quad(lambda t: (t**(z-1))*(exp(-t)),0,inf)[0]
+        del z
+        gc.collect()
         return Gam;
 
     def igame(self,mode,a,x): #incompete gamma function
@@ -35,6 +49,12 @@ class tests:
             upper = inf
             lower = x
         inte = integrate.quad(lambda t: exp(-t)*(t**(a-1)),lower,upper) #finds the integral between the bounds
+        del a
+        del x
+        del mode
+        del lower
+        del upper
+        gc.collect()
         return inte[0]/gam; #use inte [0] as it returns 2 values and only the first is needed
 
     def erfc(self,a): 
@@ -42,12 +62,19 @@ class tests:
         out = 2/(pi**(1/2))
         in_ = integrate.quad(lambda u: exp(-(u**2)),a,inf)[0]
         whole = out*in_
+        del in_
+        del out
+        gc.collect()
         return whole;
 
     def StandardNormal(self,z): #finds the standard normal probability upto z
         out = 1/( (2*pi)**(1/2)) #reduces the values so the full integral = 1
         in_ = integrate.quad(lambda u: exp(-( (u**2)/2)),-inf,z)[0] 
         total = in_*out
+        del in_
+        del out
+        del z
+        gc.collect()
         return total;
                         
     def Frequency(self): #Tests frequency of 0's and 1's to check they are aproximatly even
@@ -62,8 +89,14 @@ class tests:
             S+=((2*int(i))-1) #converts 1 -> 1 and 0-> -1 and sums them
         s = abs(S) #gives absolute value of s
         s/=n**(1/2) #divides s by root(n)
-        a = (S/(2**(1/2)))
+        a = (s/(2**(1/2)))
         P = self.erfc(a) #errored saying given 2 arguments when only 1 given - 20:44 8/5/18 fixed 9:41 10/5/18 erfc needed a self parameter
+        del a
+        del s
+        del ep
+        del n
+        del S
+        gc.collect()
         return P;
 
     def BlockFrequency(self,M):
@@ -91,6 +124,14 @@ class tests:
             sum_ += (i-(1/2))**2
         chis = 4*M*sum_
         P = self.igame("Q",N/2,chis/2)
+        del M
+        del n
+        del ep
+        del blocks
+        del Pi
+        del sum_
+        del chis
+        gc.collect()
         return P;
 
     def Runs(self):
@@ -100,18 +141,27 @@ class tests:
         if n<100:
             print("Longer string needed for accurate results")
         Pi = 0
-        for i in ep: #sums the bits in ep
-            Pi += int(i)
-        Pi /= n #gets average of each bit
         Vn = 0
-        for i in range(1,n-1): #sums the number of times it switches from 1 to 0 or visa versa
-            if ep[i] != ep[i+1]:
-                Vn += 1
-        Vn += 1 #adds one for the first run
+        t = 0
+        for i in ep: #sums the bits in ep
+            try:
+                if i != ep[t+1]:
+                    Vn +=1
+            except:
+                continue;
+            Pi += int(i)
+            t+=1
+        Vn+=1
+        Pi /= n #gets average of each bit
         try:
             P = self.erfc(abs(Vn-(2*n*Pi*(1-Pi)))/(2* ((2*n)**(1/2)) *Pi*(1-Pi))  )
         except ZeroDivisionError: #if it has only 1's then it will error so this stops crash
             P = self.erfc(inf)
+        del ep
+        del n
+        del Pi
+        del Vn
+        gc.collect()
         return P;
 
     def LongestRunOfOnes(self,M): #Tests if there is too many one's in a row (if the rest are short the runs will have missed it
@@ -186,6 +236,7 @@ class tests:
         for i in range(K+1):
             chis+=(((v[i]-(N*Pi[i]))**2)/(N*Pi[i])) #sums all variances in v divided by there expected occurances
         P = self.igame("Q",K/2,chis/2) #calcultes P value
+        del K;del chis;del v_map;del v;del low;del high;del Pi;del M; del N; del ep; del highest; del current; del in_use;del a; gc.collect()
         return P;
     
     def Rank(self): #tests for linear dependence within the string (chunks are linked to other chucks in form)
@@ -211,13 +262,14 @@ class tests:
             #print((temp))
             #exit()
             matrices.append(np.matrix(temp))#stores the matrix for later
-                
+        del temp; del temp_;    
         ranks = []
         for i in matrices: #calculates on all matrices
             temp_b,V = np.linalg.eig(i.T) #this works now (takes int's not str's), failed: 20:18 13/5/18 - no output, fixed 14/5/18 - new system
             rank_ = 32-len(i[temp_b==0,:]) #eig values are the number of zero rows, the number of none zero rows is needed
             ranks.append(rank_) #stores the rank for later
         #print(ranks)
+        del matrices; del rank_; del V
         FM = 0 #initalises the variables
         FM_ = 0
         FR = 0
@@ -229,15 +281,14 @@ class tests:
         FR = N-FM-FM_ #number of remaining matrices
         chis = ( ( (FM - (0.2888*N))**2 )/(0.2888*N) )+( ( (FM_ - (0.5776*N))**2 )/(0.5776*N) )+( ( (FR-(0.1336*N))**2 )/(0.1336*N) ) #uses formula given in spec
         P = self.igame("P",1,chis/2)
+        del chis; del FR; del N; del FM; del FM_; del ranks; del temp_b; del to_split; del chunk; del ep; del N; del M; del Q; del n; gc.collect()
         return P;
 
     def DiscreteFourierTransform(self): 
         """ uses the discrete fourier transform to detect periodic features"""
         ep = self.ep
         n = self.n
-        X=[]
-        for i in ep:
-            X.append(int(2*int(i))-1) #creates a list of coverted values: 1-> 1, 0->-1
+        X = self.X
         #print(X)
         temp = n/2 
         temp-=temp%1
@@ -260,6 +311,7 @@ class tests:
                 No += 1
         d = (No-Nz)/( (n*0.95*0.05/4)**(1/2) ) #calculates the deviation
         P = self.erfc(abs(d)/(2**(1/2)))
+        del ep; del n; del X; del temp; del S; del a; del M; del T; del Nz; del No; del d; gc.collect()
         return P;
 
     def NonOverlappingTemplateMatching(self,m): #m is length of template
@@ -293,8 +345,10 @@ class tests:
                     tem = te.strip("\n").strip(" ")
                     if len(tem)==m:
                         full.append(tem)
+            file.close()
             Bs = full[:]
-            full = [] #clears the values stored in full to reduce memory usage
+            del temp; del t; del te; del tem; gc.collect()
+            del full #clears the values stored in full to reduce memory usage
         Ps = []
         chunks = []
         for i in range(N): #splits ep into N many M long chunks
@@ -315,6 +369,7 @@ class tests:
                 chis+=((W[i]-mu)**2)/sigs
             P = self.igame("Q",N/2,chis/2)
             Ps.append(P)
+        del ep; del n; del Bs; del M; del N; del m; del chunks; del B; del W; del mu; del sigs; del chis; gc.collect()
         return Ps;
 		
     def OverlappingTemplateMatching(self,m,*mode): #m is the length of B
@@ -359,6 +414,7 @@ class tests:
         for i in range(0,5):
             chis += ( ((v[i]-(N*Pi[i]))**2)/(N*Pi[i])  )
         P = self.igame("Q",5/2,chis/2)
+        del B; del m; del mode; del M; del K; del ep; del n; del Pi; del N; del Split; del v; del chis; del lambda_; del eta; gc.collect()
         return P;
     
     def Universal(self,L,Q): #L is length of block, Q is number of initalisation blocks
@@ -380,6 +436,7 @@ class tests:
         for i in range(Q):  
             T[int(initalisation[i], base =2)] = i+1 #stores the last seen occurance of a block in the (its value) position in T +1 accounts for block counting starting at 1 in test but 0 in code
             #print(T)
+        del initalisation; gc.collect()
         total = 0
         for i in range(K):
             temp = test_seg[i] 
@@ -387,6 +444,8 @@ class tests:
             last_seen = T[value] 
             total += log(i+Q+1-last_seen,2)#sums the log of the differences in position
             T[value] = Q+i+1 #updates the last seen position to the current one
+        del temp; del value; del last_seen; gc.collect()
+        del test_seg; gc.collect()
         fn = total/K #takes the average distance
         if L == 2: #used for testing the code
             Ex = 1.5374383
@@ -400,6 +459,7 @@ class tests:
         bottom = sig*(2**(1/2))
         in_ = abs(top/bottom)
         P = self.erfc(in_)
+        del n; del ep; del K; del Exs; del Vars; del T; del top; del c; del sig; del bottom; del in_; gc.collect()
         return P;
 
     def berlekamp_massey_algorithm(self,block_data): #from https://gist.github.com/StuartGordonReid/a514ed478d42eca49568
@@ -436,8 +496,9 @@ class tests:
                     m = i
                     b = temp
             i += 1
+        gc.collect()
         return l
-    
+
     def LinearComplexity(self,M):
         K = 6
         ep = self.ep
@@ -455,7 +516,8 @@ class tests:
         mu = (M/2) + ( (9 + ( (-1)**(M+1) ) ) /36 ) - ( (M/3)+(2/9) / (2**M))
         T = []
         for i in LSFR:
-            T.append( ( (-1)**M) * ( (i)+(2/9) ) )
+            T.append( ( (-1)**M) * ( (i-mu)+(2/9) ) )
+        del LSFR; del mu; del blocks; gc.collect()
         v = [0,0,0,0,0,0,0]
         for i in T:
             if i<=-2.5:
@@ -476,6 +538,7 @@ class tests:
         for i in range(6):
             chis += ((v[i]-(N*Pi[i]))**2) /(N*Pi[i])
         P = self.igame("Q",6/2,chis/2)
+        del K; del M; del ep; del n; del N;del T; del v; del chis; del Pi; gc.collect()
         return P;
 
     def Serial(self,m):
@@ -505,11 +568,13 @@ class tests:
             psis *= ( (2**m)/n )
             psis -= n
             ps.append(psis)
+        del tep; del ep; del n; del tm; del a; del pattern;del frequency; del v; del psis;gc.collect()
         lpm = round(ps[0]-ps[1],6)
         lspm = round(ps[0] - (2*ps[1])+ps[2],10)
         P=[]
         P.append(self.igame("P",2**(m-2),lpm))
         P.append(self.igame("P",2**(m-3),lspm))
+        del lpm; del lspm; gc.collect()
         return P;
 
     def ApproximateEntropy(self,m):
@@ -534,16 +599,17 @@ class tests:
                 c = freq/n
                 if c !=0: psi += (c*log(c,exp(1)));
             psis.append(psi)
+            del psi; gc.collect()
+        del pattern; del m; del ep; del tep; del freq; del c; gc.collect()
         chis = 2*n*(log(2,exp(1))-(psis[0]-psis[1]))
         P = self.igame("Q",2**(tm-1),chis/2)
+        del tm; del chis; gc.collect()
         return P;
 
     def CumulativeSums(self,mode):
         n = self.n
         ep = self.ep
-        x = []
-        for i in ep:
-            x.append((2*(int(i)))-1)
+        x=self.X
         sum_ = 0
         sums= []
         if not mode:
@@ -558,6 +624,7 @@ class tests:
         for i in sums:
             if abs(i)>z:
                 z = abs(i)
+        del ep; del x; del sums; gc.collect()
         top = n/z
         top -= 1
         top /= 4
@@ -574,6 +641,7 @@ class tests:
         for k in range(floor(bottom2),ceil(top)):
             sum2 +=self.StandardNormal( (((4*k)+3)*z)/(n**(1/2))) - self.StandardNormal( (((4*k)+1)*z)/(n**(1/2)))
         P = 1-sum1+sum2
+        del sum1; del sum2; del top; del bottom; gc.collect()
         return P;
 
     def generatePi(self):
@@ -591,14 +659,13 @@ class tests:
                 Pi.append( front*back)
                 Pis.append(Pi)
         #print(Pis)
+        del x; del front; del back; gc.collect()
         return Pis;
         
     def RandomExcursions(self):
         ep = self.ep
         n = self.n
-        X = []
-        for i in ep: #creates modified ep
-            X.append( (2*int(i))-1)
+        X = self.X
         sums = []
         sum_ = 0
         for i in X:
@@ -618,6 +685,7 @@ class tests:
                     freq[i+4]+=1
                 else:
                     freq[i+3]+=1
+        del freq; del Sd; del ep; del n; del X; gc.collect()
         freqs = freqs[1:]
         #print("freqs=",freqs)
         v = [ [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]
@@ -628,6 +696,7 @@ class tests:
                     v[i][5] +=1
                 else:
                     v[i][temp]+=1
+        del freqs; 
         #print("v=",v)
         Pi = self.generatePi()
         Ps = []
@@ -643,14 +712,13 @@ class tests:
                     bottom = J*Pi[x][k]
                     chis += top/bottom
                 Ps.append(self.igame("Q",5/2,chis/2))
+        del tx; del chis; del bottom; del top; del x; del v; del k; del temp; gc.collect()
         return Ps;
 
     def RandomExcursionsVariant(self):
         ep = self.ep
         n = self.n
-        X = []
-        for i in ep: #creates modified ep
-            X.append( (2*int(i))-1)
+        X = self.X
         sums = []
         sum_ = 0
         for i in X:
@@ -678,32 +746,97 @@ class tests:
                 bottom = (2*J*temp)**(1/2)
                 P=self.erfc(top/bottom)
                 Ps.append(P)
+        del Sd; del J; del Xis; Ps; del X; del sums; del sum_; del temp; del bottom; del top; gc.collect()
         return Ps;
 
     def main(self):
         p = self.p
         P = []
-        P = P+[self.Frequency()]
-        P = P+[self.BlockFrequency(125000)]#125000 choosen as it is larger than n/10 and leaves no remainder for n = 10^6
-        P = P+[self.Runs()]
-        P = P+[self.LongestRunOfOnes(10000)]
-        P = P+[self.Rank()]
-        P = P+[self.DiscreteFourierTransform()]
-        P = P+self.NonOverlappingTemplateMatching(10)
-        P = P+[self.OverlappingTemplateMatching(9)]
-        P = P+[self.Universal(7,1280)]
-        P = P+[self.LinearComplexity(1000)]
-        P = P+[self.Serial(18)]
-        P = P+[self.ApproximateEntropy(18)]
-        P = P+[self.CumulativeSums()]
-        P = P+self.RandomExcursions()
-        P = P+self.RandomExcursionsVariant()
-        print(P)
-        for i in P:
-            if P<p:
+        a = self.Frequency()
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.BlockFrequency(125000)#125000 choosen as it is larger than n/10 and leaves no remainder for n = 10^6
+        print(a)
+        if a<p:
+            return False;
+
+        del a; gc.collect()
+        a = self.Runs()
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.LongestRunOfOnes(10000)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.Rank()
+        print(a)
+        if a<p:
+            return False;
+        
+        del a; gc.collect()
+        a = self.DiscreteFourierTransform()
+        print(a)
+        if a<p:
+            return False;
+        
+        del a; gc.collect()
+        a = self.NonOverlappingTemplateMatching(10) #returns list
+        print(a)
+        for b in a:
+            if b<p:
+                print(b)
                 return False;
+        del a; gc.collect()
+        a=self.OverlappingTemplateMatching(9)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.Universal(7,1280)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a= self.LinearComplexity(1000)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.Serial(18)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.ApproximateEntropy(18)
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.CumulativeSums()
+        print(a)
+        if a<p:
+            return False;
+        del a; gc.collect()
+        a = self.RandomExcursions() #list
+        print(a)
+        for b in a:
+            if b<p:
+                print(b)
+                return False;
+        del a; gc.collect()
+        a = self.RandomExcursionsVariant() #list
+        print(a)
+        for b in a:
+            if b<p:
+                print(b)
+                return False;
+        del a; gc.collect()
         return True;
-    
 def test_varient():
     ep =  "0110110101"
     test=tests(ep,0.01)
