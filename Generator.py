@@ -9,6 +9,7 @@ class Sponge:
         if nr == 0:
             nr = 12+(2*self.fl)
         self.nr = nr
+        
     def S_to_A(self,S):
         A  = self.form_Ad()
         w = self.w
@@ -20,6 +21,7 @@ class Sponge:
                     A[x][y][z]=S[(w*( (5*y)+x))+z]
         gc.collect()
         return A;
+    
     def A_to_S(self,A):
         #print(len(A))
         d = []
@@ -40,6 +42,7 @@ class Sponge:
         S = str(Plane[0])+str(Plane[1])+str(Plane[2])+str(Plane[3])+str(Plane[4])
         gc.collect()
         return S;
+    
     def form_Ad(self):
         lane = []
         for z in range(0,int(self.w)):
@@ -222,6 +225,7 @@ class PRNG:
     def main(self,request,inp):
         s = self.s
         f = self.f
+        
         if request == "feed" and len(self.pad(inp))==self.k*self.r:
             print("FEED")
             p = []
@@ -289,10 +293,6 @@ class PRNG:
         need = self.k+self.r - len(inp)
         x = len(inp)
         m = (x*need)-2
-        """ (m+2)%x = need
-             m+2 = x*need
-             m = x*need - 2
-        """
         a = self.pa(x,m)
         out = inp+a
         if len(out) != need:
